@@ -2,6 +2,7 @@ package com.prashant.ecommerce.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -30,12 +31,12 @@ public class ProductService {
 	}
 	
 
-	public ResponseEntity<List<Product>> findAllProducts(int pageNumber, int pageSize) {
+	public ResponseEntity<Iterable<Product>> findAllProducts(int pageNumber, int pageSize) {
 		// pagination
 		Pageable pageable = PageRequest.of(pageNumber, pageSize);
 		
 		Page<Product> productsPage = productRepository.findAll(pageable);
-		List<Product> products = productsPage.getContent();
+		Iterable<Product> products = productsPage.getContent();
 		
 		return new ResponseEntity<>(products, HttpStatus.OK) ;
 	}
@@ -80,22 +81,24 @@ public class ProductService {
 		return new ResponseEntity<>("Deleted succesfully", HttpStatus.OK);
 	}
 	
-	public ResponseEntity<List<Product>> searchProduct(String query) {
-		List<Product> products = productRepository.searchProducts(query);
-		return new ResponseEntity<>(products, HttpStatus.OK);
-	}
+	
+	public ResponseEntity<Iterable<Product>> searchProducts(String query, int pageNumber, int pageSize) {
 
+        try {
+            Pageable pageable = PageRequest.of(pageNumber, pageSize);
+            Page<Product> searchResults = productRepository.search(query, pageable);
 
-//	public ResponseEntity<List<Product>> searchProductByName(String name) {
-//		List<Product> products = productRepository.findByNameContaining(name);
-//		return new ResponseEntity<> (products, HttpStatus.OK);
-//	}
-//
-//
-//	public ResponseEntity<List<Product>> searchProductByContent(String name, String description, String category) {
-//		List<Product> products = productRepository.findByNameContainingOrDescriptionContainingOrCategoryContaining(name, description, category);
-//		return new ResponseEntity<> (products, HttpStatus.OK);
-//	}
+            if (searchResults.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
 
-
+            return new ResponseEntity<>(searchResults.getContent(), HttpStatus.OK);
+        } catch (Exception e) {
+            
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+	
+	
+	
 }

@@ -3,7 +3,9 @@ package com.prashant.ecommerce;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,6 +14,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -120,21 +125,27 @@ public class ProductControllerTest {
         assertEquals(HttpStatus.OK, deletedResponse.getStatusCode());
     }
     
+    
     @Test
-    public void testSearchProduct() {
-        // Mocking the behavior of the repository's searchProducts method
-        when(productRepository.searchProducts("query")).thenReturn(Arrays.asList(
-                new Product(1, "Product1", "Description1", "Category1", 100),
-                new Product(2, "Product2", "Description2", "Category2", 150)
-        ));
+    public void testSearchProducts() {
+        // Arrange
+        String query = "Sample Query";
+        int pageNumber = 0;
+        int pageSize = 5;
 
-        // Calling the searchProduct method
-        ResponseEntity<List<Product>> responseEntity = productService.searchProduct("query");
+        List<Product> searchResultsList = new ArrayList<>();
+        searchResultsList.add(new Product(123, "Sample Name", "Sample Description", "Sample Category", 100.00d));
+        Page<Product> searchResultsPage = new PageImpl<>(searchResultsList);
 
-        // Verifying the results
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        List<Product> products = responseEntity.getBody();
-        assertEquals(2, products.size()); 
+        when(productRepository.search(query, Pageable.ofSize(pageSize))).thenReturn(searchResultsPage);
+
+        // Act
+        ResponseEntity<Iterable<Product>> response = productService.searchProducts(query, pageNumber, pageSize);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(searchResultsList, response.getBody());
     }
+    
     
 }

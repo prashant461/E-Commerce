@@ -27,6 +27,7 @@ public class ProductController {
 	@Autowired
 	private ProductService productService;
 	
+	
 	// adding new product in database
 	@PostMapping("/add-product")
 	public ResponseEntity<Product> addProduct(@RequestBody Product product) {
@@ -37,7 +38,7 @@ public class ProductController {
 	// take params for pagination as page size and page number
 	
 	@GetMapping("/all-products")
-	public ResponseEntity<List<Product>> findAllProducts(
+	public ResponseEntity<Iterable<Product>> findAllProducts(
 	        @RequestParam(value = "pageSize", defaultValue = "5", required = false) int pageSize,
 	        @RequestParam(value = "pageNumber", defaultValue = "0", required = false) int pageNumber
 	) {
@@ -64,30 +65,21 @@ public class ProductController {
 		return productService.deleteProduct(productId);
 	}
 	
-	// search by content
-	@GetMapping("search")
-	public ResponseEntity<List<Product>> searchProducts(
-			@RequestParam(name = "query", required = true) String query
-			) {
-		
-		return productService.searchProduct(query);
-	}
+	// search for any keyword
+	@GetMapping("/search")
+    public ResponseEntity<Iterable<Product>> searchProducts(
+            @RequestParam(value = "query", required = false) String query,
+            @RequestParam(value = "pageSize", defaultValue = "5", required = false) int pageSize,
+            @RequestParam(value = "pageNumber", defaultValue = "0", required = false) int pageNumber
+    ) {
+        if (query == null || query.isEmpty()) {
+            // If no query is provided, return all products 
+            return findAllProducts(pageSize, pageNumber);
+        }
+
+        return productService.searchProducts(query, pageNumber, pageSize);
+    }
 	
 	
-//	//search by name
-//	@GetMapping("search-by-name/{name}")
-//	public ResponseEntity<List<Product>> searchProductByName(@PathVariable String name) {
-//		return productService.searchProductByName(name);
-//		
-//	}
-//	
-//	// search by content of product
-//	@GetMapping("search-by-content")
-//	public ResponseEntity<List<Product>> searchProductByContent(
-//			@RequestParam(name = "name", required = true ) String name,
-//			@RequestParam(name = "description", required = false) String description,
-//			@RequestParam(name = "category", required = false) String category
-//			) {
-//		return productService.searchProductByContent(name, description, category);
-//	}
+
 }
